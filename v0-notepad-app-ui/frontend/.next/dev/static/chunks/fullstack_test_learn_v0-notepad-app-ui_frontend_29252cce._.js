@@ -90,22 +90,27 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 "[project]/fullstack_test_learn/v0-notepad-app-ui/frontend/lib/date-utils.ts [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
+// Accept timestamps (number) instead of Date objects
 __turbopack_context__.s([
     "formatDateLong",
     ()=>formatDateLong,
     "formatDistanceToNow",
     ()=>formatDistanceToNow
 ]);
-function formatDistanceToNow(date) {
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+function formatDistanceToNow(timestamp) {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    const now = Date.now();
+    const seconds = Math.floor((now - date.getTime()) / 1000);
     if (seconds < 60) return "now";
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
     return date.toLocaleDateString();
 }
-function formatDateLong(date) {
+function formatDateLong(timestamp) {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
     return new Intl.DateTimeFormat("en-US", {
         year: "numeric",
         month: "short",
@@ -737,64 +742,98 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+const API_BASE = "http://127.0.0.1:8000";
 function Page() {
     _s();
     const [notes, setNotes] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [selectedNoteId, setSelectedNoteId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [toast, setToast] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
-    // Load notes from localStorage
+    // Fetch notes (based on page mount)
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Page.useEffect": ()=>{
-            const saved = localStorage.getItem("notes");
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                setNotes(parsed.map({
-                    "Page.useEffect": (note)=>({
-                            ...note,
-                            created_at: new Date(note.created_at),
-                            updated_at: new Date(note.updated_at)
-                        })
-                }["Page.useEffect"]));
-                if (parsed.length > 0) {
-                    setSelectedNoteId(parsed[0].id);
+            const loadNotes = {
+                "Page.useEffect.loadNotes": async ()=>{
+                    try {
+                        const res = await fetch(`${API_BASE}/notes`);
+                        const data = await res.json();
+                        const normalized = data.map({
+                            "Page.useEffect.loadNotes.normalized": (n)=>({
+                                    ...n,
+                                    updated_at: Number(n.updated_at),
+                                    created_at: n.created_at !== undefined ? Number(n.created_at) : undefined
+                                })
+                        }["Page.useEffect.loadNotes.normalized"]);
+                        setNotes(normalized);
+                        if (normalized.length > 0) setSelectedNoteId(normalized[0].id);
+                    } catch (error) {
+                        console.error("Error loading notes:", error);
+                    }
                 }
-            }
+            }["Page.useEffect.loadNotes"];
+            loadNotes();
         }
     }["Page.useEffect"], []);
-    // Save notes to localStorage
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
-        "Page.useEffect": ()=>{
-            if (notes.length > 0) {
-                localStorage.setItem("notes", JSON.stringify(notes));
-            }
+    const upsertNote = async (note)=>{
+        const res = await fetch(`${API_BASE}/notes`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(note)
+        });
+        if (!res.ok) {
+            showToast("Failed to save note", "error");
+            return;
         }
-    }["Page.useEffect"], [
-        notes
-    ]);
-    const createNote = ()=>{
-        const newNote = {
-            id: Date.now().toString(),
+        // This is the Note as the backend sees it, with the correct updated_at
+        const saved = await res.json();
+        setNotes((prev)=>{
+            const exists = prev.some((n)=>n.id === saved.id);
+            return exists ? prev.map((n)=>n.id === saved.id ? saved : n) : [
+                saved,
+                ...prev
+            ];
+        });
+    };
+    // Delete note
+    const handleDeleteNote = async (id)=>{
+        setNotes((prev)=>prev.filter((n)=>n.id !== id));
+        await fetch(`${API_BASE}/notes/${id}`, {
+            method: "DELETE"
+        });
+    };
+    const createNote = async ()=>{
+        const id = Date.now().toString();
+        await upsertNote({
+            id,
             title: "New Note",
-            content: "",
-            created_at: new Date(),
-            updated_at: new Date()
-        };
-        setNotes([
-            newNote,
-            ...notes
-        ]);
-        setSelectedNoteId(newNote.id);
+            content: ""
+        });
+        setSelectedNoteId(id);
         showToast("Note created", "success");
     };
-    const updateNote = (id, updates)=>{
-        setNotes(notes.map((note)=>note.id === id ? {
-                ...note,
-                ...updates,
-                updated_at: new Date()
-            } : note));
+    const updateNote = async (id, updates)=>{
+        const existing = notes.find((n)=>n.id === id);
+        if (!existing) return;
+        const updatedNote = {
+            ...existing,
+            ...updates
+        };
+        // Update selectedNote immediately for visible typing
+        if (selectedNoteId === id) {
+            setSelectedNoteId(id); // keep it selected
+        }
+        // Update notes list
+        setNotes((prev)=>prev.map((n)=>n.id === id ? updatedNote : n));
+        // Send to backend
+        await upsertNote({
+            id,
+            title: updatedNote.title,
+            content: updatedNote.content
+        });
     };
     const deleteNote = (id)=>{
-        setNotes(notes.filter((note)=>note.id !== id));
+        handleDeleteNote(id);
         if (selectedNoteId === id) {
             setSelectedNoteId(notes.length > 1 ? notes[0].id : null);
         }
@@ -820,7 +859,7 @@ function Page() {
                 onDeleteNote: deleteNote
             }, void 0, false, {
                 fileName: "[project]/fullstack_test_learn/v0-notepad-app-ui/frontend/app/page.tsx",
-                lineNumber: 79,
+                lineNumber: 149,
                 columnNumber: 7
             }, this),
             toast && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$fullstack_test_learn$2f$v0$2d$notepad$2d$app$2d$ui$2f$frontend$2f$components$2f$toast$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Toast"], {
@@ -829,17 +868,17 @@ function Page() {
                 onClose: ()=>setToast(null)
             }, void 0, false, {
                 fileName: "[project]/fullstack_test_learn/v0-notepad-app-ui/frontend/app/page.tsx",
-                lineNumber: 87,
+                lineNumber: 157,
                 columnNumber: 17
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/fullstack_test_learn/v0-notepad-app-ui/frontend/app/page.tsx",
-        lineNumber: 78,
+        lineNumber: 148,
         columnNumber: 5
     }, this);
 }
-_s(Page, "/HgzurPptY6PKDc0BI46ScrPDto=");
+_s(Page, "I32feegmvwDSI6bzicEWGJ7YtY4=");
 _c = Page;
 var _c;
 __turbopack_context__.k.register(_c, "Page");
