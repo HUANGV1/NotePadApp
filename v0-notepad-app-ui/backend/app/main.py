@@ -12,7 +12,10 @@ app = FastAPI()
 # Allow frontend (Next.js) to fetch from backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    origins = [
+    "http://localhost:3000",      # dev
+    # add your Vercel URL later, e.g. "https://your-app.vercel.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )

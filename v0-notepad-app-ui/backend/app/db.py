@@ -1,7 +1,9 @@
 from pathlib import Path
 import sqlite3
+import os
 
-DB_PATH = Path(__file__).parent / "notes.db"
+DEFAULT_DB_PATH = Path(__file__).parent / "notes.db"
+DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH)))
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
