@@ -5,18 +5,22 @@ import { Menu, Plus } from "lucide-react"
 interface HeaderProps {
   onCreateNote: () => void
   onMenuClick: () => void
+  onLogoClick: () => void
 }
 
-export function Header({ onCreateNote, onMenuClick }: HeaderProps) {
+export function Header({ onCreateNote, onMenuClick, onLogoClick }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
         <button onClick={onMenuClick} className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors">
           <Menu className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <button
+          onClick={onLogoClick}
+          className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
+        >
           Notepad
-        </h1>
+        </button>
       </div>
 
       <button

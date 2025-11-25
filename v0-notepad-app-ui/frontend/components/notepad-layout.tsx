@@ -5,6 +5,7 @@ import type { Note } from "@/app/page"
 import { Header } from "./header"
 import { Sidebar } from "./sidebar"
 import { Editor } from "./editor"
+import { HeroPage } from "./hero-page"
 import { DeleteDialog } from "./delete-dialog"
 
 interface NotepadLayoutProps {
@@ -27,6 +28,7 @@ export function NotepadLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null)
+  const [showHero, setShowHero] = useState(false)
 
   const handleDeleteClick = (id: string) => {
     setNoteToDelete(id)
@@ -43,20 +45,29 @@ export function NotepadLayout({
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Header onCreateNote={onCreateNote} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <Header
+        onCreateNote={onCreateNote}
+        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+        onLogoClick={() => setShowHero(true)}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           notes={notes}
           selectedNoteId={selectedNote?.id || null}
-          onSelectNote={onSelectNote}
+          onSelectNote={(id) => {
+            onSelectNote(id)
+            setShowHero(false)
+          }}
           onDeleteNote={handleDeleteClick}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
 
         <main className="flex-1 overflow-hidden">
-          {selectedNote ? (
+          {showHero ? (
+            <HeroPage />
+          ) : selectedNote ? (
             <Editor
               note={selectedNote}
               onTitleChange={(title) => onUpdateNote(selectedNote.id, { title })}
