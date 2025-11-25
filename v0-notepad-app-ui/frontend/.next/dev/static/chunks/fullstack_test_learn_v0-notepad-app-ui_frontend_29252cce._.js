@@ -765,7 +765,7 @@ function Page() {
                                 })
                         }["Page.useEffect.loadNotes.normalized"]);
                         setNotes(normalized);
-                        if (normalized.length > 0) setSelectedNoteId(normalized[0].id);
+                    //if (normalized.length > 0) setSelectedNoteId(normalized[0].id);
                     } catch (error) {
                         console.error("Error loading notes:", error);
                     }

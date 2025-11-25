@@ -15,7 +15,10 @@ interface NotepadLayoutProps {
   onCreateNote: () => void
   onUpdateNote: (id: string, updates: Partial<Note>) => void
   onDeleteNote: (id: string) => void
+  showHero: boolean
+  setShowHero: (value: boolean) => void
 }
+
 
 export function NotepadLayout({
   notes,
@@ -24,11 +27,12 @@ export function NotepadLayout({
   onCreateNote,
   onUpdateNote,
   onDeleteNote,
+  showHero,
+  setShowHero,
 }: NotepadLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null)
-  const [showHero, setShowHero] = useState(false)
 
   const handleDeleteClick = (id: string) => {
     setNoteToDelete(id)
@@ -46,11 +50,13 @@ export function NotepadLayout({
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header
-        onCreateNote={onCreateNote}
+        onCreateNote={() => {
+          setShowHero(false);   // hide hero when a new note is created
+          onCreateNote();
+        }}
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-        onLogoClick={() => setShowHero(true)}
+        onLogoClick={() => setShowHero(true)}  // logo always shows hero
       />
-
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           notes={notes}

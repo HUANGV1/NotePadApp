@@ -18,6 +18,7 @@ export default function Page() {
   const [notes, setNotes] = useState<Note[]>([])
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [showHero, setShowHero] = useState(true);
 
   // Fetch notes (based on page mount)
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function Page() {
         }));
 
         setNotes(normalized);
-        if (normalized.length > 0) setSelectedNoteId(normalized[0].id);
+        //if (normalized.length > 0) setSelectedNoteId(normalized[0].id);
       } catch (error) {
         console.error("Error loading notes:", error);
       }
@@ -95,6 +96,7 @@ export default function Page() {
     });
 
     setSelectedNoteId(id);
+    setShowHero(false);
     showToast("Note created", "success");
   };
 
@@ -147,13 +149,18 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-background">
       <NotepadLayout
-        notes={notes}
-        selectedNote={selectedNote || null}
-        onSelectNote={setSelectedNoteId}
-        onCreateNote={createNote}
-        onUpdateNote={updateNote}
-        onDeleteNote={deleteNote}
-      />
+    notes={notes}
+    selectedNote={selectedNote || null}
+    onSelectNote={(id) => {
+      setSelectedNoteId(id);
+      setShowHero(false);          // hide hero when clicking a note
+    }}
+    onCreateNote={createNote}
+    onUpdateNote={updateNote}
+    onDeleteNote={deleteNote}
+    showHero={showHero}
+    setShowHero={setShowHero}
+  />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
