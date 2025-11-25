@@ -1,4 +1,71 @@
+########################################
+# Frontend - Next.js / React / Node.js
+########################################
 node_modules/
 .next/
 dist/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Local env files
 .env
+.env.*.local
+
+# Dependency lock files (optional—keep only the one you use)
+pnpm-lock.yaml
+# yarn.lock
+# package-lock.json
+
+# Editor folders
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+
+########################################
+# Backend - Python / FastAPI
+########################################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.db  # SQLite database files (persistent local only)
+notes.db
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Local env
+.env
+*.env
+
+# Python egg files
+*.egg-info/
+.eggs/
+
+# Build artifacts
+build/
+dist/
+
+
+########################################
+# General
+########################################
+# Ignore cache
+.cache/
+
+# OS trash files
+*.swp
+*.swo
